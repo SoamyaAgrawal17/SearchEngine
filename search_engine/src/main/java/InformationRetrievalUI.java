@@ -7,6 +7,7 @@ import edu.stanford.nlp.process.PTBTokenizer;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -27,6 +28,7 @@ import java.util.logging.Logger;
  *
  * @author Tejeshwar Reddy
  */
+@Slf4j
 public class InformationRetrievalUI extends javax.swing.JFrame {
 
     /* metaphone code implementation */
@@ -257,7 +259,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
 
     public static void printMap(HashMap<String, Double> map) {
         for (Entry<String, Double> entry : map.entrySet()) {
-            System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue());
+            log.info("Key : " + entry.getKey() + " Value : " + entry.getValue());
         }
     }
 
@@ -416,7 +418,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         jList1.setSelectedIndex(jList1.locationToIndex(evt.getPoint()));
         data = jList1.getSelectedValue().toString();
         index = jList1.getSelectedIndex();
-        System.out.println(data);
+        log.info(data);
         if (SwingUtilities.isRightMouseButton(evt) && jList1.locationToIndex(evt.getPoint()) == index) {
             if (!jList1.isSelectionEmpty()) {
                 pop.show(jList1, evt.getX(), evt.getY());
@@ -552,7 +554,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
             String key = entry.getKey();
             Double d = entry.getValue();
             sortedOutput.add(key);
-            System.out.println(key + "   " + d);
+            log.info(key + "   " + d);
         }
 
         populateList(sortedOutput);

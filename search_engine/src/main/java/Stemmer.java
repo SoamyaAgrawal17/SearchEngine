@@ -34,6 +34,7 @@
 */
 
 import java.io.*;
+import lombok.extern.slf4j.Slf4j;
 
 /**
   * Stemmer, implementing the Porter Stemming Algorithm
@@ -42,7 +43,7 @@ import java.io.*;
   * word can be provided a character at time (by calling add()), or at once
   * by calling one of the various stem(something) methods.
   */
-
+@Slf4j
 class Stemmer
 {  private char[] b;
    private int i,     /* offset into b */
@@ -403,23 +404,23 @@ class Stemmer
                           /* to test getResultBuffer(), getResultLength() : */
                           /* u = new String(s.getResultBuffer(), 0, s.getResultLength()); */
 
-                          System.out.print(u);
+                          log.info(u);
                        }
                        break;
                     }
                  }
               }
               if (ch < 0) break;
-              System.out.print((char)ch);
+              //log.info((char)ch);
            }
          }
          catch (IOException e)
-         {  System.out.println("error reading " + args[i]);
+         {  log.info("error reading " + args[i]);
             break;
          }
       }
       catch (FileNotFoundException e)
-      {  System.out.println("file " + args[i] + " not found");
+      {  log.info("file " + args[i] + " not found");
          break;
       }
    }
