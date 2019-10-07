@@ -64,9 +64,9 @@ class Stemmer
 
    public void add(char ch)
    {  if (i == b.length)
-      {  char[] new_b = new char[i+INC];
-         for (int c = 0; c < i; c++) new_b[c] = b[c];
-         b = new_b;
+      {  char[] newB = new char[i+INC];
+         for (int c = 0; c < i; c++) newB[c] = b[c];
+         b = newB;
       }
       b[i++] = ch;
    }

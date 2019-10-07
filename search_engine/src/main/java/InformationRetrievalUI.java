@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -34,12 +33,13 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     /* metaphone code implementation */
     // ABCDEFGHIJKLMNOPQRSTUVWXYZ
     private static final char[] DEFAULT_MAPPING = "vBKTvFKHvJKLMNvPKRSTvFW*YS".toCharArray();
+    public static final String AEIOU = "AEIOU";
 
     private static char map(char c) {
         return DEFAULT_MAPPING[c - 'A'];
     }
 
-    private static int CODE_LENGTH = 6;
+    private static final int CODE_LENGTH = 6;
 
     public static String encode(final String string) {
         String word = string.toUpperCase();
@@ -59,19 +59,19 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         // Transform input string to all caps
         final char[] input = word.toCharArray();
 
-        int code_index = 0;
+        int codeIndex = 0;
         final char[] code = new char[CODE_LENGTH];
 
         // Save previous character of word
-        char prev_c = '?';
+        char prevC = '?';
 
-        for (int i = 0; i < input.length && code_index < CODE_LENGTH; i++) {
+        for (int i = 0; i < input.length && codeIndex < CODE_LENGTH; i++) {
             final char c = input[i];
             /*
 			 * if (c!='C' && c == prev_c) { 43 // prev_c = c is unncessary 44
 			 * continue; 45 } 46
              */
-            if (c == prev_c) {
+            if (c == prevC) {
                 // Especial rule for double letters
                 if (c == 'C') {
                     // We have "cc". The first "c" has already been mapped
@@ -96,7 +96,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                 case 'U':
                     // Keep a vowel only if it is the first letter
                     if (i == 0) {
-                        code[code_index++] = c;
+                        code[codeIndex++] = c;
                     }
                     break;
 
@@ -106,62 +106,56 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                 case 'M':
                 case 'N':
                 case 'R':
-                    code[code_index++] = c;
+                    code[codeIndex++] = c;
                     break;
                 case 'Q':
                 case 'V':
                 case 'Z':
-                    code[code_index++] = map(c);
+                    code[codeIndex++] = map(c);
                     break;
 
                 // B -> B only if NOT MB$
                 case 'B':
-                    if (!(i == input.length - 1 && code_index > 0 && code[code_index - 1] == 'M')) {
-                        code[code_index++] = c;
+                    if (!(i == input.length - 1 && codeIndex > 0 && code[codeIndex - 1] == 'M')) {
+                        code[codeIndex++] = c;
                     }
                     break;
 
                 case 'C':
                     if (i < input.length - 2 && input[i + 1] == 'I' && input[i + 2] == 'A') {
-                        code[code_index++] = 'X';
+                        code[codeIndex++] = 'X';
                     } else if (i < input.length - 1 && input[i + 1] == 'H' && i > 0 && input[i - 1] != 'S') {
-                        code[code_index++] = 'X';
+                        code[codeIndex++] = 'X';
                     } else if (i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0) {
-                        code[code_index++] = 'S';
+                        code[codeIndex++] = 'S';
                     } else {
-                        code[code_index++] = 'K';
+                        code[codeIndex++] = 'K';
                     }
                     break;
 
                 case 'D':
                     if (i < input.length - 2 && input[i + 1] == 'G' && "EIY".indexOf(input[i + 2]) >= 0) {
-                        code[code_index++] = 'J';
+                        code[codeIndex++] = 'J';
                     } else {
-                        code[code_index++] = 'T';
+                        code[codeIndex++] = 'T';
                     }
                     break;
 
                 case 'G':
-                    if (i < input.length - 1 && input[i + 1] == 'N')
-					; // GN -> N [GNED -> NED]
-                    else if (i > 0 && input[i - 1] == 'D' && i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0)
-					; // DG[IEY] -> D[IEY]
-                    else if (i < input.length - 1 && input[i + 1] == 'H'
-                            && (i + 2 == input.length || "AEIOU".indexOf(input[i + 2]) < 0))
-					; else if (i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0) {
-                        code[code_index++] = 'J';
-                    } else {
-                        code[code_index++] = map(c);
-                    }
+                    // DG[IEY] -> D[IEY]
+                    if (i < input.length - 1 && input[i + 1] == 'N' || i > 0 && input[i - 1] == 'D' && i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0 || i < input.length - 1 && input[i + 1] == 'H'
+                            && (i + 2 == input.length || AEIOU.indexOf(input[i + 2]) < 0)) ; // GN -> N [GNED -> NED]
+                    else if (i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0)
+                            code[codeIndex++] = 'J';
+                    else code[codeIndex++] = map(c);
                     break;
-
                 case 'H':
                     if (i > 0 && "AEIOUCGPST".indexOf(input[i - 1]) >= 0)
 					; // vH -> v
-                    else if (i < input.length - 1 && "AEIOU".indexOf(input[i + 1]) < 0)
+                    else if (i < input.length - 1 && AEIOU.indexOf(input[i + 1]) < 0)
 					; // Hc -> c
                     else {
-                        code[code_index++] = c;
+                        code[codeIndex++] = c;
                     }
                     break;
 
@@ -169,25 +163,25 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                     if (i > 0 && input[i - 1] == 'C')
 					; // CK -> K
                     else {
-                        code[code_index++] = map(c);
+                        code[codeIndex++] = map(c);
                     }
                     break;
 
                 case 'P':
                     if (i < input.length - 1 && input[i + 1] == 'H') {
-                        code[code_index++] = 'F';
+                        code[codeIndex++] = 'F';
                     } else {
-                        code[code_index++] = map(c);
+                        code[codeIndex++] = map(c);
                     }
                     break;
 
                 case 'S':
                     if (i < input.length - 2 && input[i + 1] == 'I' && (input[i + 2] == 'A' || input[i + 2] == 'O')) {
-                        code[code_index++] = 'X';
+                        code[codeIndex++] = 'X';
                     } else if (i < input.length - 1 && input[i + 1] == 'H') {
-                        code[code_index++] = 'X';
+                        code[codeIndex++] = 'X';
                     } else {
-                        code[code_index++] = 'S';
+                        code[codeIndex++] = 'S';
                     }
                     break;
 
@@ -197,13 +191,13 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                     // -TH- -> -0-
                     // -T- -> -T-
                     if (i < input.length - 2 && input[i + 1] == 'I' && (input[i + 2] == 'A' || input[i + 2] == 'O')) {
-                        code[code_index++] = 'X';
+                        code[codeIndex++] = 'X';
                     } else if (i < input.length - 1 && input[i + 1] == 'H') {
-                        code[code_index++] = '0';
+                        code[codeIndex++] = '0';
                     } else if (i < input.length - 2 && input[i + 1] == 'C' && input[i + 2] == 'H')
 					; // drop letter
                     else {
-                        code[code_index++] = 'T';
+                        code[codeIndex++] = 'T';
                     }
                     break;
 
@@ -211,45 +205,39 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                 case 'Y':
                     // -Wv- -> -Wv-; -Wc- -> -c-
                     // -Yv- -> -Yv-; -Yc- -> -c-
-                    if (i < input.length - 1 && "AEIOU".indexOf(input[i + 1]) >= 0) {
-                        code[code_index++] = map(c);
+                    if (i < input.length - 1 && AEIOU.indexOf(input[i + 1]) >= 0) {
+                        code[codeIndex++] = map(c);
                     }
                     break;
 
                 case 'X':
                     // -X- -> -KS-
-                    code[code_index++] = 'K';
-                    if (code_index < code.length) {
-                        code[code_index++] = 'S';
+                    code[codeIndex++] = 'K';
+                    if (codeIndex < code.length) {
+                        code[codeIndex++] = 'S';
                     }
                     break;
 
                 default:
                     assert (false);
             }
-            prev_c = c;
+            prevC = c;
         }
-        return new String(code, 0, code_index);
+        return new String(code, 0, codeIndex);
     }
 
     private static HashMap<String, Double> sortByComparator(HashMap<String, Double> unsortMap, final boolean order) {
 
-        List<Entry<String, Double>> list = new LinkedList<Entry<String, Double>>(unsortMap.entrySet());
+        List<Entry<String, Double>> list = new LinkedList<>(unsortMap.entrySet());
 
         // Sorting the list based on values
-        Collections.sort(list, new Comparator<Entry<String, Double>>() {
-            public int compare(Entry<String, Double> o1, Entry<String, Double> o2) {
-                if (order) {
-                    return o1.getValue().compareTo(o2.getValue());
-                } else {
-                    return o2.getValue().compareTo(o1.getValue());
-
-                }
-            }
+        Collections.sort(list, (Entry<String, Double> o1, Entry<String, Double> o2) -> {
+            if (order) return o1.getValue().compareTo(o2.getValue());
+            else return o2.getValue().compareTo(o1.getValue());
         });
 
         // Maintaining insertion order with the help of LinkedList
-        HashMap<String, Double> sortedMap = new LinkedHashMap<String, Double>();
+        HashMap<String, Double> sortedMap = new LinkedHashMap<>();
         for (Entry<String, Double> entry : list) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
@@ -257,7 +245,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         return sortedMap;
     }
 
-    public static void printMap(HashMap<String, Double> map) {
+    public static void printMap(Map<String, Double> map) {
         for (Entry<String, Double> entry : map.entrySet()) {
             log.info("Key : " + entry.getKey() + " Value : " + entry.getValue());
         }
@@ -266,7 +254,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     /**
      * Creates new form InformationRetrievalUI
      */
-    public InformationRetrievalUI() throws JSONException, IOException {
+    public InformationRetrievalUI() throws IOException {
         initComponents();
         addPopup();
     }
@@ -295,23 +283,16 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
 
         jTextField1.setFont(new java.awt.Font("SansSerif", 0, 18)); // NOI18N
         jTextField1.setToolTipText("Enter the Query Here");
-        jTextField1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextField1ActionPerformed(evt);
-            }
-        });
+        jTextField1.addActionListener((java.awt.event.ActionEvent evt) -> jTextField1ActionPerformed());
         jTextField1.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 jTextField1KeyPressed(evt);
             }
         });
 
         jButton1.setText("Search");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
+        jButton1.addActionListener((java.awt.event.ActionEvent evt) -> jButton1ActionPerformed());
 
         jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 13)); // NOI18N
         jLabel1.setText("Search Here");
@@ -324,6 +305,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         jSpinner1.setModel(new javax.swing.SpinnerNumberModel(10, 3, 30, 1));
 
         jList1.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jList1MouseClicked(evt);
             }
@@ -381,20 +363,18 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed() {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         dm.removeAllElements();
-        String query = jTextField1.getText().toString();
+        String query = jTextField1.getText();
         try {
             searchResult(query);
-        } catch (JSONException ex) {
-            Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
+        } catch (JSONException | IOException ex) {
             Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
+    private void jTextField1ActionPerformed() {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField1ActionPerformed
 
@@ -402,12 +382,10 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             dm.removeAllElements();
-            String query = jTextField1.getText().toString();
+            String query = jTextField1.getText();
             try {
                 searchResult(query);
-            } catch (JSONException ex) {
-                Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
+            } catch (JSONException | IOException ex) {
                 Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -416,21 +394,19 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     private void jList1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jList1MouseClicked
         // TODO add your handling code here:
         jList1.setSelectedIndex(jList1.locationToIndex(evt.getPoint()));
-        data = jList1.getSelectedValue().toString();
+        data = jList1.getSelectedValue();
         index = jList1.getSelectedIndex();
         log.info(data);
-        if (SwingUtilities.isRightMouseButton(evt) && jList1.locationToIndex(evt.getPoint()) == index) {
-            if (!jList1.isSelectionEmpty()) {
-                pop.show(jList1, evt.getX(), evt.getY());
-            }
+        if (SwingUtilities.isRightMouseButton(evt) && jList1.locationToIndex(evt.getPoint()) == index && !jList1.isSelectionEmpty()) {
+            pop.show(jList1, evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jList1MouseClicked
 
     String fileName = "/corpus/pizza_request_dataset.json";
 
-    private void searchResult(String query) throws JSONException, FileNotFoundException, IOException {
+    private void searchResult(String query) throws IOException {
 
-        TreeMap<String, Integer> queryMap = new TreeMap<String, Integer>();
+        TreeMap<String, Integer> queryMap = new TreeMap<>();
         // Query Tokenization begins
         PTBTokenizer<CoreLabel> ptbtQuery = new PTBTokenizer<>(new StringReader(query), new CoreLabelTokenFactory(), "");
         while (ptbtQuery.hasNext()) {
@@ -469,24 +445,23 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         } finally {
             br.close();
         }
-        JSONArray JSONarray = new JSONArray(json);
+        JSONArray jsonArray = new JSONArray(json);
 
-        // 'FinalTermFrequencyMap' is the TreeMap that displays the final document with dictionary
+        // 'finalTermFrequencyMap' is the TreeMap that displays the final document with dictionary
         // terms as tokens and integer value as document frequency
-        TreeMap<String, Integer> FinalTermFrequencyMap = new TreeMap<String, Integer>();
+        TreeMap<String, Integer> finalTermFrequencyMap = new TreeMap<>();
 
         // Making an array list of all the individual Treemaps that represent
         // individual documents (in terms of tokens and term frequency).
-        ArrayList<TreeMap<String, Integer>> list = new ArrayList<TreeMap<String, Integer>>();
-        for (int i = 0; i < JSONarray.length(); i++) {
-            JSONObject object = JSONarray.getJSONObject(i);
-            String request_data = null;
-            request_data = object.getString("request_text");
+        ArrayList<TreeMap<String, Integer>> list = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject object = jsonArray.getJSONObject(i);
+            String requestText = object.getString("request_text");
 
             //Document Tokenization begins
-            TreeMap<String, Integer> IndividualTermFrequency = new TreeMap<String, Integer>();
+            TreeMap<String, Integer> individualTermFrequency = new TreeMap<>();
 
-            PTBTokenizer<CoreLabel> ptbtDoc = new PTBTokenizer<>(new StringReader(request_data),
+            PTBTokenizer<CoreLabel> ptbtDoc = new PTBTokenizer<>(new StringReader(requestText),
                     new CoreLabelTokenFactory(), "");
             while (ptbtDoc.hasNext()) {
                 CoreLabel docToken = ptbtDoc.next();
@@ -505,22 +480,22 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                     //Document Metaphone begins
                     docTerm = encode(docTerm);
                 }
-                Integer freq = IndividualTermFrequency.get(docTerm);
-                IndividualTermFrequency.put(docTerm, (freq == null) ? 1 : freq + 1);
+                Integer freq = individualTermFrequency.get(docTerm);
+                individualTermFrequency.put(docTerm, (freq == null) ? 1 : freq + 1);
             }
-            for (Entry<String, Integer> entry : IndividualTermFrequency.entrySet()) {
+            for (Entry<String, Integer> entry : individualTermFrequency.entrySet()) {
                 String key = entry.getKey();
-                Integer freq = FinalTermFrequencyMap.get(key);
-                FinalTermFrequencyMap.put(key, (freq == null) ? 1 : freq + 1);
+                Integer freq = finalTermFrequencyMap.get(key);
+                finalTermFrequencyMap.put(key, (freq == null) ? 1 : freq + 1);
             }
 
-            list.add(IndividualTermFrequency);
+            list.add(individualTermFrequency);
         }
         //Total Number of Documents-'totalDocuments'
         int totalDocuments = list.size();
-        TreeMap<String, Double> rankedProduct = new TreeMap<String, Double>();
+        TreeMap<String, Double> rankedProduct = new TreeMap<>();
 
-        for (Entry<String, Integer> entry : FinalTermFrequencyMap.entrySet()) {
+        for (Entry<String, Integer> entry : finalTermFrequencyMap.entrySet()) {
 
             String key = entry.getKey();
             Integer documentFrequency = entry.getValue();
@@ -564,17 +539,17 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     static int index = 0;
     final JPopupMenu pop = new JPopupMenu();
     DefaultListModel<String> dm = new DefaultListModel<>();
-    int doc_number = 0;
+    int docNumber = 0;
 
     private void populateList(ArrayList<String> sortedOutput) {
-        doc_number = Integer.parseInt(jSpinner1.getValue().toString());
-        for (int i = 0; i < doc_number; i++) {
+        docNumber = Integer.parseInt(jSpinner1.getValue().toString());
+        for (int i = 0; i < docNumber; i++) {
             dm.addElement(sortedOutput.get(i));
         }
         jList1.setModel(dm);
     }
 
-    private void addPopup() throws JSONException, FileNotFoundException, IOException {
+    private void addPopup() throws IOException {
         JMenuItem show = new JMenuItem("show");
         pop.add(show);
         BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(fileName), StandardCharsets.UTF_8));
@@ -585,9 +560,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
             line = br.readLine();
         }
         br.close();
-        show.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        show.addActionListener((ActionEvent e) -> {
                 try {
                     JSONArray array = new JSONArray(sb.toString());
                     JSONObject object = null;
@@ -601,13 +574,13 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                     Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        });
+        );
     }
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -620,26 +593,17 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(InformationRetrievalUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(InformationRetrievalUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(InformationRetrievalUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(InformationRetrievalUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    new InformationRetrievalUI().setVisible(true);
-                } catch (JSONException ex) {
-                    Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex) {
-                    Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
-                }
+
+        java.awt.EventQueue.invokeLater(() -> {
+            try {
+                new InformationRetrievalUI().setVisible(true);
+            } catch (JSONException | IOException ex) {
+                Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }
