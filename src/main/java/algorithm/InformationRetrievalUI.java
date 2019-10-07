@@ -8,7 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-
+import opennlp.tools.stemmer.PorterStemmer;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Soamya Agrawal
+ * @author Soamya Agrawal, Tejeshwar Reddy, Ayushi Behl
  */
 @Slf4j
 public class InformationRetrievalUI extends javax.swing.JFrame {
@@ -426,7 +426,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         while (ptbtQuery.hasNext()) {
             CoreLabel queryToken = ptbtQuery.next();
             // Query Stemming begins
-            Stemmer s = new Stemmer();
+            PorterStemmer s = new PorterStemmer();
             String querystring = queryToken.toString();
             querystring = querystring.toLowerCase();
             for (int c = 0; c < querystring.length(); c++) {
@@ -480,7 +480,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
             while (ptbtDoc.hasNext()) {
                 CoreLabel docToken = ptbtDoc.next();
                 //Document Stemming begins
-                Stemmer s = new Stemmer();
+                PorterStemmer s = new PorterStemmer();
                 String docString = docToken.toString();
                 docString = docString.toLowerCase();
 
