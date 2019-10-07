@@ -187,12 +187,11 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
 
     private String fileName = "/corpus/pizza_request_dataset.json";
 
-    private void searchResult(String query) throws IOException {
-
+    private TreeMap<String, Integer> initialProcessing(String query) {
         TreeMap<String, Integer> queryMap = new TreeMap<>();
-        // Query Tokenization begins
+        //Query tokenization
         PTBTokenizer<CoreLabel> ptbtQuery = new PTBTokenizer<>(new StringReader(query), new CoreLabelTokenFactory(), "");
-        Metaphone metaphone = new Metaphone();
+
         while (ptbtQuery.hasNext()) {
             CoreLabel queryToken = ptbtQuery.next();
             // Query Stemming begins
@@ -209,14 +208,21 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
             if (queryTerm.matches("[a-zA-Z][a-z]+")) {
 
                 // Query Metaphone begins
+                Metaphone metaphone = new Metaphone();
                 queryTerm = metaphone.encode(queryTerm);
             }
             Integer freq = queryMap.get(queryTerm);
             queryMap.put(queryTerm, (freq == null) ? 1 : freq + 1);
         }
+        return queryMap;
+    }
+
+    private void searchResult(String query) throws IOException {
+
+        TreeMap<String, Integer> queryMap = initialProcessing(query);
 
         // Corpus-retrieving of documents from json file
-        String json = null;
+        String json;
         BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(fileName), StandardCharsets.UTF_8));
         try {
             StringBuilder sb = new StringBuilder();
@@ -244,30 +250,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
             String requestText = object.getString("request_text");
 
             //Document Tokenization begins
-            TreeMap<String, Integer> individualTermFrequency = new TreeMap<>();
-
-            PTBTokenizer<CoreLabel> ptbtDoc = new PTBTokenizer<>(new StringReader(requestText),
-                    new CoreLabelTokenFactory(), "");
-            while (ptbtDoc.hasNext()) {
-                CoreLabel docToken = ptbtDoc.next();
-                //Document Stemming begins
-                PorterStemmer s = new PorterStemmer();
-                String docString = docToken.toString();
-                docString = docString.toLowerCase();
-
-                for (int c = 0; c < docString.length(); c++) {
-                    s.add(docString.charAt(c));
-                }
-                s.stem();
-                String docTerm;
-                docTerm = s.toString();
-                if (docTerm.matches("[a-zA-Z][a-z]+")) {
-                    //Document Metaphone begins
-                    docTerm = metaphone.encode(docTerm);
-                }
-                Integer freq = individualTermFrequency.get(docTerm);
-                individualTermFrequency.put(docTerm, (freq == null) ? 1 : freq + 1);
-            }
+            TreeMap<String, Integer> individualTermFrequency = initialProcessing(requestText);
             for (Entry<String, Integer> entry : individualTermFrequency.entrySet()) {
                 String key = entry.getKey();
                 Integer freq = finalTermFrequencyMap.get(key);
