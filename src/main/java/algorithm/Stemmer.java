@@ -45,15 +45,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class Stemmer
 {  private char[] b;
-   private int i,     /* offset into b */
-               i_end, /* offset to end of stemmed word */
-               j, k;
+   private int i;     /* offset into b */
+    private int iEnd; /* offset to end of stemmed word */
+    private int j;
+    private int k;
    private static final int INC = 50;
                      /* unit of size whereby b is increased */
    public Stemmer()
    {  b = new char[INC];
       i = 0;
-      i_end = 0;
+      iEnd = 0;
    }
 
    /**
@@ -90,12 +91,12 @@ class Stemmer
     * or a reference to the internal buffer can be retrieved by getResultBuffer
     * and getResultLength (which is generally more efficient.)
     */
-   public String toString() { return new String(b,0,i_end); }
+   public String toString() { return new String(b,0, iEnd); }
 
    /**
     * Returns the length of the word resulting from the stemming process.
     */
-   public int getResultLength() { return i_end; }
+   public int getResultLength() { return iEnd; }
 
    /**
     * Returns a reference to a character buffer containing the results of
@@ -356,7 +357,7 @@ class Stemmer
    public void stem()
    {  k = i - 1;
       if (k > 1) { step1(); step2(); step3(); step4(); step5(); step6(); }
-      i_end = k+1; i = 0;
+      iEnd = k+1; i = 0;
    }
 
    /** Test program for demonstrating the algorithm.algorithm.Stemmer.  It reads text from a

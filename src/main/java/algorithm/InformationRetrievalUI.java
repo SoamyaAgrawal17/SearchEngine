@@ -46,7 +46,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     /* metaphone code implementation */
     // ABCDEFGHIJKLMNOPQRSTUVWXYZ
     private static final char[] DEFAULT_MAPPING = "vBKTvFKHvJKLMNvPKRSTvFW*YS".toCharArray();
-    public static final String AEIOU = "AEIOU";
+    private static final String AEIOU = "AEIOU";
 
     private static char map(char c) {
         return DEFAULT_MAPPING[c - 'A'];
@@ -54,7 +54,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
 
     private static final int CODE_LENGTH = 6;
 
-    public static String encode(final String string) {
+    private static String encode(final String string) {
         String word = string.toUpperCase();
         word = word.replaceAll("[^A-Z]", "");
         if (word.length() == 0) {
@@ -524,7 +524,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
 
         // Making a HashMap that contains dictionary tokens and their final
         // product value which would be used to keep ranking of documents
-        HashMap<String, Double> unsortMap = new HashMap<String, Double>();
+        HashMap<String, Double> unsortMap = new HashMap<>();
         int i = 1;
         for (TreeMap<String, Integer> d : list) {
             Double product = 1.00;
@@ -554,11 +554,11 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         populateList(sortedOutput);
     }
 
-    static String data = "";
-    static int index = 0;
-    final JPopupMenu pop = new JPopupMenu();
-    DefaultListModel<String> dm = new DefaultListModel<>();
-    int docNumber = 0;
+    private static String data = "";
+    private static int index = 0;
+    private final JPopupMenu pop = new JPopupMenu();
+    private DefaultListModel<String> dm = new DefaultListModel<>();
+    private int docNumber = 0;
 
     private void populateList(ArrayList<String> sortedOutput) {
         docNumber = Integer.parseInt(jSpinner1.getValue().toString());
