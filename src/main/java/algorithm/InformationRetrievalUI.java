@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import opennlp.tools.stemmer.PorterStemmer;
+import org.apache.commons.codec.language.Metaphone;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -20,12 +21,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -37,233 +33,6 @@ import java.util.logging.Logger;
  */
 @Slf4j
 public class InformationRetrievalUI extends javax.swing.JFrame {
-
-    /* metaphone code implementation */
-    // ABCDEFGHIJKLMNOPQRSTUVWXYZ
-    private static final char[] DEFAULT_MAPPING = "vBKTvFKHvJKLMNvPKRSTvFW*YS".toCharArray();
-    private static final String AEIOU = "AEIOU";
-
-    private static char map(char c) {
-        return DEFAULT_MAPPING[c - 'A'];
-    }
-
-    private static final int CODE_LENGTH = 6;
-
-    private static String encode(final String string) {
-        String word = string.toUpperCase();
-        word = word.replaceAll("[^A-Z]", "");
-        if (word.length() == 0) {
-            return "";
-        } else if (word.length() == 1) {
-            return word;
-        }
-        word = word.replaceFirst("^[KGP]N", "N");
-        word = word.replaceFirst("^WR", "R");
-        word = word.replaceFirst("^AE", "E");
-        word = word.replaceFirst("^PF", "F");
-        word = word.replaceFirst("^WH", "W");
-        word = word.replaceFirst("^X", "S");
-
-        // Transform input string to all caps
-        final char[] input = word.toCharArray();
-
-        int codeIndex = 0;
-        final char[] code = new char[CODE_LENGTH];
-
-        // Save previous character of word
-        char prevC = '?';
-
-        for (int i = 0; i < input.length && codeIndex < CODE_LENGTH; i++) {
-            final char c = input[i];
-            /*
-			 * if (c!='C' && c == prev_c) { 43 // prev_c = c is unncessary 44
-			 * continue; 45 } 46
-             */
-            if (c == prevC) {
-                // Especial rule for double letters
-                if (c == 'C') {
-                    // We have "cc". The first "c" has already been mapped
-                    // to "K".
-                    if (i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0) {
-                        // Do nothing and let it do to cc[eiy] -> KS
-                    } else {
-                        // This "cc" is just one sound
-                        continue;
-                    }
-                } else {
-                    // It is not "cc", so ignore the second letter
-                    continue;
-                }
-            }
-            switch (c) {
-
-                case 'A':
-                case 'E':
-                case 'I':
-                case 'O':
-                case 'U':
-                    // Keep a vowel only if it is the first letter
-                    if (i == 0) {
-                        code[codeIndex++] = c;
-                    }
-                    break;
-
-                case 'F':
-                case 'J':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'R':
-                    code[codeIndex++] = c;
-                    break;
-                case 'Q':
-                case 'V':
-                case 'Z':
-                    code[codeIndex++] = map(c);
-                    break;
-
-                // B -> B only if NOT MB$
-                case 'B':
-                    if (!(i == input.length - 1 && codeIndex > 0 && code[codeIndex - 1] == 'M')) {
-                        code[codeIndex++] = c;
-                    }
-                    break;
-
-                case 'C':
-                    if (i < input.length - 2 && input[i + 1] == 'I' && input[i + 2] == 'A') {
-                        code[codeIndex++] = 'X';
-                    } else if (i < input.length - 1 && input[i + 1] == 'H' && i > 0 && input[i - 1] != 'S') {
-                        code[codeIndex++] = 'X';
-                    } else if (i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0) {
-                        code[codeIndex++] = 'S';
-                    } else {
-                        code[codeIndex++] = 'K';
-                    }
-                    break;
-
-                case 'D':
-                    if (i < input.length - 2 && input[i + 1] == 'G' && "EIY".indexOf(input[i + 2]) >= 0) {
-                        code[codeIndex++] = 'J';
-                    } else {
-                        code[codeIndex++] = 'T';
-                    }
-                    break;
-
-                case 'G':
-                    // DG[IEY] -> D[IEY]
-                    if (i < input.length - 1 && input[i + 1] == 'N' || i > 0 && input[i - 1] == 'D' && i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0 || i < input.length - 1 && input[i + 1] == 'H'
-                            && (i + 2 == input.length || AEIOU.indexOf(input[i + 2]) < 0)) {
-                        // GN -> N [GNED -> NED]
-                    }
-                    else if (i < input.length - 1 && "EIY".indexOf(input[i + 1]) >= 0)
-                            code[codeIndex++] = 'J';
-                    else code[codeIndex++] = map(c);
-                    break;
-                case 'H':
-                    if (i > 0 && "AEIOUCGPST".indexOf(input[i - 1]) >= 0) {
-                        // vH -> v
-                    }
-                    else if (i < input.length - 1 && AEIOU.indexOf(input[i + 1]) < 0) {
-                        // Hc -> c
-                    }
-                    else {
-                        code[codeIndex++] = c;
-                    }
-                    break;
-
-                case 'K':
-                    if (i > 0 && input[i - 1] == 'C') {
-                        // CK -> K
-                    }
-                    else {
-                        code[codeIndex++] = map(c);
-                    }
-                    break;
-
-                case 'P':
-                    if (i < input.length - 1 && input[i + 1] == 'H') {
-                        code[codeIndex++] = 'F';
-                    } else {
-                        code[codeIndex++] = map(c);
-                    }
-                    break;
-
-                case 'S':
-                    if (i < input.length - 2 && input[i + 1] == 'I' && (input[i + 2] == 'A' || input[i + 2] == 'O')) {
-                        code[codeIndex++] = 'X';
-                    } else if (i < input.length - 1 && input[i + 1] == 'H') {
-                        code[codeIndex++] = 'X';
-                    } else {
-                        code[codeIndex++] = 'S';
-                    }
-                    break;
-
-                case 'T':
-                    // -TI[AO]- -> -XI[AO]-
-                    // -TCH- -> -CH-
-                    // -TH- -> -0-
-                    // -T- -> -T-
-                    if (i < input.length - 2 && input[i + 1] == 'I' && (input[i + 2] == 'A' || input[i + 2] == 'O')) {
-                        code[codeIndex++] = 'X';
-                    } else if (i < input.length - 1 && input[i + 1] == 'H') {
-                        code[codeIndex++] = '0';
-                    } else if (i < input.length - 2 && input[i + 1] == 'C' && input[i + 2] == 'H') {
-                        // drop letter
-                    }
-                    else {
-                        code[codeIndex++] = 'T';
-                    }
-                    break;
-
-                case 'W':
-                case 'Y':
-                    // -Wv- -> -Wv-; -Wc- -> -c-
-                    // -Yv- -> -Yv-; -Yc- -> -c-
-                    if (i < input.length - 1 && AEIOU.indexOf(input[i + 1]) >= 0) {
-                        code[codeIndex++] = map(c);
-                    }
-                    break;
-
-                case 'X':
-                    // -X- -> -KS-
-                    code[codeIndex++] = 'K';
-                    if (codeIndex < code.length) {
-                        code[codeIndex++] = 'S';
-                    }
-                    break;
-
-                default:
-                    assert (false);
-            }
-            prevC = c;
-        }
-        return new String(code, 0, codeIndex);
-    }
-
-    private static HashMap<String, Double> sortByComparator(HashMap<String, Double> unsortMap, final boolean order) {
-
-        List<Entry<String, Double>> list = new LinkedList<>(unsortMap.entrySet());
-
-        // Sorting the list based on values
-        Collections.sort(list, (Entry<String, Double> o1, Entry<String, Double> o2) -> {
-            if (order) return o1.getValue().compareTo(o2.getValue());
-            else return o2.getValue().compareTo(o1.getValue());
-        });
-
-        // Maintaining insertion order with the help of LinkedList
-        HashMap<String, Double> sortedMap = new LinkedHashMap<>();
-        for (Entry<String, Double> entry : list) {
-            sortedMap.put(entry.getKey(), entry.getValue());
-        }
-
-        return sortedMap;
-    }
-
-    public static void printMap(Map<String, Double> map) {
-        for (Entry<String, Double> entry : map.entrySet()) {
-            log.info("Key : " + entry.getKey() + " Value : " + entry.getValue());
-        }
-    }
 
     /**
      * Creates new form algorithm.InformationRetrievalUI
@@ -423,6 +192,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         TreeMap<String, Integer> queryMap = new TreeMap<>();
         // Query Tokenization begins
         PTBTokenizer<CoreLabel> ptbtQuery = new PTBTokenizer<>(new StringReader(query), new CoreLabelTokenFactory(), "");
+        Metaphone metaphone = new Metaphone();
         while (ptbtQuery.hasNext()) {
             CoreLabel queryToken = ptbtQuery.next();
             // Query Stemming begins
@@ -435,10 +205,11 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
             s.stem();
             String queryTerm;
             queryTerm = s.toString();
+
             if (queryTerm.matches("[a-zA-Z][a-z]+")) {
 
                 // Query Metaphone begins
-                queryTerm = encode(queryTerm);
+                queryTerm = metaphone.encode(queryTerm);
             }
             Integer freq = queryMap.get(queryTerm);
             queryMap.put(queryTerm, (freq == null) ? 1 : freq + 1);
@@ -492,7 +263,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
                 docTerm = s.toString();
                 if (docTerm.matches("[a-zA-Z][a-z]+")) {
                     //Document Metaphone begins
-                    docTerm = encode(docTerm);
+                    docTerm = metaphone.encode(docTerm);
                 }
                 Integer freq = individualTermFrequency.get(docTerm);
                 individualTermFrequency.put(docTerm, (freq == null) ? 1 : freq + 1);
@@ -536,7 +307,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         }
         // Making a new HashMap that would sort the HashMap that contained key
         // and unsorted product ranks in descending order
-        HashMap<String, Double> sortedMapDesc = sortByComparator(unsortMap, false);
+        HashMap<String, Double> sortedMapDesc = Util.sortByComparator(unsortMap, false);
         ArrayList<String> sortedOutput = new ArrayList<>();
         for (Entry<String, Double> entry : sortedMapDesc.entrySet()) {
 
