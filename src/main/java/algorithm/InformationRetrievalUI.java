@@ -31,11 +31,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 /**
  *
  * @author Soamya Agrawal
@@ -414,14 +409,14 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         jList1.setSelectedIndex(jList1.locationToIndex(evt.getPoint()));
         data = jList1.getSelectedValue();
-        index = jList1.getSelectedIndex();
+        int index = jList1.getSelectedIndex();
         log.info(data);
         if (SwingUtilities.isRightMouseButton(evt) && jList1.locationToIndex(evt.getPoint()) == index && !jList1.isSelectionEmpty()) {
             pop.show(jList1, evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jList1MouseClicked
 
-    String fileName = "/corpus/pizza_request_dataset.json";
+    private String fileName = "/corpus/pizza_request_dataset.json";
 
     private void searchResult(String query) throws IOException {
 
@@ -555,13 +550,11 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     }
 
     private static String data = "";
-    private static int index = 0;
     private final JPopupMenu pop = new JPopupMenu();
     private DefaultListModel<String> dm = new DefaultListModel<>();
-    private int docNumber = 0;
 
     private void populateList(ArrayList<String> sortedOutput) {
-        docNumber = Integer.parseInt(jSpinner1.getValue().toString());
+        int docNumber = Integer.parseInt(jSpinner1.getValue().toString());
         for (int i = 0; i < docNumber; i++) {
             dm.addElement(sortedOutput.get(i));
         }
