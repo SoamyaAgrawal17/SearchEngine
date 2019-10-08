@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import opennlp.tools.stemmer.PorterStemmer;
 import org.apache.commons.codec.language.Metaphone;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -23,6 +24,7 @@ import java.util.TreeMap;
 public class InformationRetrievalBackend {
 
     private String fileName = "/corpus/pizza_request_dataset.json";
+
     private TreeMap<String, Integer> initialProcessing(String query) {
         TreeMap<String, Integer> queryMap = new TreeMap<>();
         //Query tokenization
@@ -59,8 +61,8 @@ public class InformationRetrievalBackend {
 
         // Corpus-retrieving of documents from json file
         String json;
-        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(fileName), StandardCharsets.UTF_8));
-        try {
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(fileName), StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
             String line = br.readLine();
 
@@ -69,8 +71,6 @@ public class InformationRetrievalBackend {
                 line = br.readLine();
             }
             json = sb.toString();
-        } finally {
-            br.close();
         }
         JSONArray jsonArray = new JSONArray(json);
 
@@ -137,6 +137,31 @@ public class InformationRetrievalBackend {
         }
 
         return sortedOutput;
+    }
+
+    String getDocumentData(String data) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(fileName), StandardCharsets.UTF_8));
+        StringBuilder sb = new StringBuilder();
+        String line = br.readLine();
+        while (line != null) {
+            sb.append(line);
+            line = br.readLine();
+        }
+        br.close();
+        String content = null;
+        try {
+            JSONArray array = new JSONArray(sb.toString());
+            JSONObject object;
+
+            if (data != null) {
+                object = array.getJSONObject(Integer.parseInt(data.substring(4)));
+                content = object.getString("request_text");
+            }
+
+        } catch (JSONException ex) {
+            log.error(ex.getMessage());
+        }
+        return content;
     }
 
 }

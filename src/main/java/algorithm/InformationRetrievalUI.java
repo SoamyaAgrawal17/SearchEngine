@@ -1,18 +1,13 @@
 package algorithm;
 
 import com.sun.glass.events.KeyEvent;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -20,7 +15,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Soamya Agrawal, Tejeshwar Reddy, Ayushi Behl
+ * @author Soamya Agrawal
  */
 @Slf4j
 public class InformationRetrievalUI extends javax.swing.JFrame {
@@ -28,7 +23,7 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     /**
      * Creates new form algorithm.InformationRetrievalUI
      */
-    public InformationRetrievalUI() throws IOException {
+    private InformationRetrievalUI() {
         initComponents();
         addPopup();
     }
@@ -43,12 +38,12 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     private void initComponents() {
 
         jTextField1 = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
+        JButton jButton1 = new JButton();
+        JLabel jLabel1 = new JLabel();
+        JLabel jLabel2 = new JLabel();
+        JLabel jLabel3 = new JLabel();
         jSpinner1 = new javax.swing.JSpinner();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        JScrollPane jScrollPane2 = new JScrollPane();
         jList1 = new javax.swing.JList<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -138,7 +133,6 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed() {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
         dm.removeAllElements();
         String query = jTextField1.getText();
         try {
@@ -151,11 +145,9 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jTextField1ActionPerformed() {//GEN-FIRST:event_jTextField1ActionPerformed
-        // TODO add your handling code here:
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jTextField1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField1KeyPressed
-        // TODO add your handling code here:
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             dm.removeAllElements();
             String query = jTextField1.getText();
@@ -170,7 +162,6 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextField1KeyPressed
 
     private void jList1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jList1MouseClicked
-        // TODO add your handling code here:
         jList1.setSelectedIndex(jList1.locationToIndex(evt.getPoint()));
         data = jList1.getSelectedValue();
         int index = jList1.getSelectedIndex();
@@ -180,7 +171,6 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jList1MouseClicked
 
-    private String fileName = "/corpus/pizza_request_dataset.json";
     private static String data = "";
     private final JPopupMenu pop = new JPopupMenu();
     private DefaultListModel<String> dm = new DefaultListModel<>();
@@ -193,31 +183,19 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         jList1.setModel(dm);
     }
 
-    private void addPopup() throws IOException {
+    private void addPopup() {
         JMenuItem show = new JMenuItem("show");
         pop.add(show);
-        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(fileName), StandardCharsets.UTF_8));
-        StringBuilder sb = new StringBuilder();
-        String line = br.readLine();
-        while (line != null) {
-            sb.append(line);
-            line = br.readLine();
-        }
-        br.close();
         show.addActionListener((ActionEvent e) -> {
-                try {
-                    JSONArray array = new JSONArray(sb.toString());
-                    JSONObject object = null;
-                    String content = null;
-                    if (data != null) {
-                        object = array.getJSONObject(Integer.parseInt(data.substring(4)));
-                        content = object.getString("request_text");
-                    }
-                    JOptionPane.showMessageDialog(InformationRetrievalUI.this, "<html><body><p style='width: 200px;'>" + content, "DOC DATA", JOptionPane.INFORMATION_MESSAGE);
-                } catch (JSONException ex) {
-                    Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            InformationRetrievalBackend informationRetrievalBackend = new InformationRetrievalBackend();
+            String content = null;
+            try {
+                content = informationRetrievalBackend.getDocumentData(data);
+                JOptionPane.showMessageDialog(InformationRetrievalUI.this, "<html><body><p style='width: 200px;'>" + content, "DOC DATA", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e1) {
+                log.error(e1.getMessage());
             }
+        }
         );
     }
 
@@ -246,19 +224,13 @@ public class InformationRetrievalUI extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> {
             try {
                 new InformationRetrievalUI().setVisible(true);
-            } catch (JSONException | IOException ex) {
+            } catch (JSONException ex) {
                 Logger.getLogger(InformationRetrievalUI.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JList<String> jList1;
-    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSpinner jSpinner1;
     private javax.swing.JTextField jTextField1;
     // End of variables declaration//GEN-END:variables
