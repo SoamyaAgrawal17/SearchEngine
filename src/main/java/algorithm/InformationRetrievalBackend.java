@@ -23,7 +23,7 @@ import java.util.TreeMap;
 @Slf4j
 public class InformationRetrievalBackend {
 
-    private String fileName = "/corpus/pizza_request_dataset.json";
+    private String fileName = "/corpus/datasets.json";
 
     private TreeMap<String, Integer> initialProcessing(String query) {
         TreeMap<String, Integer> queryMap = new TreeMap<>();
